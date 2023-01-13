@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Create User</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+  <style>
+    /* Add some styles for the body and form */
+    body {
+      background-color: #191970;
+      font-family: 'Fira Code', monospace;
+    }
+    form {
+      width: 300px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: white;
+      border-radius: 10px;
+    }
+
+    /* Add some styles for the form fields */
+    label {
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+      padding: 8px;
+      font-size: 16px;
+      width: 100%;
+      margin-bottom: 20px;
+      box-sizing: border-box;
+    }
+
+    input[type="submit"] {
+      background-color: #4CAF50;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* Add some styles for the response message */
+    .response {
+      margin-top: 20px;
+      padding: 12px;
+      font-size: 18px;
+      text-align: center;
+    }
+
+    /* Add some styles for the error message */
+    .error {
+      color: red;
+    }
+    /* Add some styles for the image */
+    img{
+        width:200px;
+        margin:auto;
+        display:block;
+    }
+  </style>
+</head>
+<body>
+    <img src="https://predify.me/wp-content/uploads/2020/03/LogoPredify_branco.png">
+  <form method="post" id="create-form">
+    {% csrf_token %}
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" required>
+    <br>
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required>
+    <br>
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required>
+    <br>
+    <input type="submit" value="Create User">
+  </form>
+  <div class="response"></div>
+  <script>
+    // Add JavaScript to handle form submission
+    var form = document.getElementById("create-form");
+    form.addEventListener("submit", function(event) {
+      event.preventDefault();
+
+      var name = document.getElementById("name").value;
+      var email = document.getElementById("email").value;
+      var password = document.getElementById("password").value;
+      // Make a request to the server to create the user
+      fetch("/create_user/", {
+        method: "POST",
+        body: JSON.stringify({
+          name: name,
+          email: email,
+          password: password
+        }),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+      .then(function(response) {
+        return response.text();
+      })
+      .then(function(responseText) {
+        // Show the response message
+        var response = document.querySelector(".response");
+        response.innerHTML = responseText;
+      })
+      .catch(function(error) {
+        // Show the error message
+        var response = document.querySelector(".response");
+        response.innerHTML = "An error occurred: " + error;
+        response.classList.add("error");
+      });
+    });
+  </script>
+</body>
+</html>
+
