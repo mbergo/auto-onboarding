@@ -1,0 +1,25 @@
+name: Django CI
+
+on:
+  pull_request:
+    branches: [ "*" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup
+      run: | 
+        ls -la
+        source auto-onboarding/venv/bin/activate
+    - name: Install Dependencies
+      run: |
+        pip install selenium
+    - name: Run Tests
+      run: |
+        python -m unittest tests/test_create_user.py
