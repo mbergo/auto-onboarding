@@ -1,1 +1,2 @@
 django/auto-onboarding/client_secret_file.json
+*.pyc
