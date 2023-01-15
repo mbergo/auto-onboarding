@@ -1,39 +1,41 @@
+#!/usr/bin/env python3
+
 import json
-import argparse
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
+import requests
+import sys
 
-# Put your client secrets in a json file
-CLIENT_SECRET_FILE = 'client_secret.json'
-creds = Credentials.from_authorized_user_info(info=json.loads(CLIENT_SECRET_FILE), scopes=['https://www.googleapis.com/auth/admin.directory.user'])
+# Get command line arguments
+name = sys.argv[1]
+email = sys.argv[2]
+password = sys.argv[3]
 
-# Build the API client
-directory_service = build('admin', 'directory_v1', credentials=creds)
-
-# Define the new user's details
-def create_user(name, email, password):
-    new_user = {
-        'primaryEmail': email,
-        'name': {
-            'givenName': name.split()[0],
-            'familyName': name.split()[1]
-        },
-        'password': password
+# Replace with your own access token"
+with open('token.json') as f:
+    data = json.load(f)
+    access_token = data['access_token']
+# Build the request body
+data = {
+    "accountEnabled": True,
+    "displayName": name,
+    "mailNickname": name,
+    "userPrincipalName": email,
+    "passwordProfile": {
+        "forceChangePasswordNextSignIn": True,
+        "password": password
     }
+}
 
-    # Create the user
-    try:
-        directory_service.users().insert(body=new_user).execute()
-        print(f'User {new_user["primaryEmail"]} created successfully.')
-    except HttpError as error:
-        print(f'An error occurred: {error}')
+# Make the request to create the user
+url = "https://graph.microsoft.com/v1.0/users"
+headers = {
+    "Authorization": f"Bearer {access_token}",
+    "Content-Type": "application/json"
+}
+response = requests.post(url, headers=headers, json=data)
 
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Create a new user with email on the predify.me')
-    parser.add_argument('name', type=str, help='Full name of the user')
-    parser.add_argument('email', type=str, help='Email of the user')
-    parser.add_argument('password', type=str, help='Password of the user')
-    args = parser.parse_args()
-    create_user(args.name, args.email, args.password)
+# Check for success
+if response.status_code == 201:
+    print("Successfully created user.")
+else:
+    print("Failed to create user.")
+    print(response.text)
