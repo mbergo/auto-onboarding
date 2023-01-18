@@ -1,41 +1,42 @@
-#!/usr/bin/env python3
-
+import argparse
 import json
 import requests
-import sys
 
-# Get command line arguments
-name = sys.argv[1]
-email = sys.argv[2]
-password = sys.argv[3]
+# parse the command line arguments
+name = argv[1]
+email = argv[2]
+password = argv[3]
 
-# Replace with your own access token"
-with open('token.json') as f:
-    data = json.load(f)
-    access_token = data['access_token']
-# Build the request body
+# Load the token from the token.json file
+with open('token.json', 'r') as f:
+    token = json.load(f)['access_token']
+
+# Define the endpoint for creating a user in Office 365
+url = 'https://graph.microsoft.com/v1.0/users'
+
+# Define the data for the new user
 data = {
-    "accountEnabled": True,
-    "displayName": name,
-    "mailNickname": name,
-    "userPrincipalName": email,
-    "passwordProfile": {
-        "forceChangePasswordNextSignIn": True,
-        "password": password
+    'accountEnabled': True,
+    'displayName': name,
+    'mailNickname': email.split('@')[0],
+    'userPrincipalName': email,
+    'passwordProfile': {
+        'forceChangePasswordNextSignIn': True,
+        'password': password
     }
 }
 
-# Make the request to create the user
-url = "https://graph.microsoft.com/v1.0/users"
+# Set the headers for the request
 headers = {
-    "Authorization": f"Bearer {access_token}",
-    "Content-Type": "application/json"
+    'Authorization': f'Bearer {token}',
+    'Content-Type': 'application/json'
 }
-response = requests.post(url, headers=headers, json=data)
 
-# Check for success
-if response.status_code == 201:
-    print("Successfully created user.")
+# Make the request to create the user
+response = requests.post(url, json=data, headers=headers)
+
+# Check the status code of the response
+if response.status_code != 201:
+    print('Error creating user:', response.text)
 else:
-    print("Failed to create user.")
-    print(response.text)
+    print('User created successfully!')
