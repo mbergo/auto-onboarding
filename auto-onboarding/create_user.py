@@ -1,39 +1,44 @@
-import json
 import argparse
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
+import json
+import requests
 
-# Put your client secrets in a json file
-CLIENT_SECRET_FILE = 'client_secret.json'
-creds = Credentials.from_authorized_user_info(info=json.loads(CLIENT_SECRET_FILE), scopes=['https://www.googleapis.com/auth/admin.directory.user'])
+# parse the command line arguments
+parser = argparse.ArgumentParser(description='Create Office365 user')
+parser.add_argument('name', help='Name of the user')
+parser.add_argument('email', help='Email of the user')
+parser.add_argument('password', help='Password of the user')
+args = parser.parse_args()
 
-# Build the API client
-directory_service = build('admin', 'directory_v1', credentials=creds)
+# Load the token from the token.json file
+with open('token.json', 'r') as f:
+    token = json.load(f)['access_token']
 
-# Define the new user's details
-def create_user(name, email, password):
-    new_user = {
-        'primaryEmail': email,
-        'name': {
-            'givenName': name.split()[0],
-            'familyName': name.split()[1]
-        },
-        'password': password
+# Define the endpoint for creating a user in Office 365
+url = 'https://graph.microsoft.com/v1.0/users'
+
+# Define the data for the new user
+data = {
+    'accountEnabled': True,
+    'displayName': args.name,
+    'mailNickname': args.email.split('@')[0],
+    'userPrincipalName': args.email,
+    'passwordProfile': {
+        'forceChangePasswordNextSignIn': True,
+        'password': args.password
     }
+}
 
-    # Create the user
-    try:
-        directory_service.users().insert(body=new_user).execute()
-        print(f'User {new_user["primaryEmail"]} created successfully.')
-    except HttpError as error:
-        print(f'An error occurred: {error}')
+# Set the headers for the request
+headers = {
+    'Authorization': f'Bearer {token}',
+    'Content-Type': 'application/json'
+}
 
+# Make the request to create the user
+response = requests.post(url, json=data, headers=headers)
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Create a new user with email on the predify.me')
-    parser.add_argument('name', type=str, help='Full name of the user')
-    parser.add_argument('email', type=str, help='Email of the user')
-    parser.add_argument('password', type=str, help='Password of the user')
-    args = parser.parse_args()
-    create_user(args.name, args.email, args.password)
+# Check the status code of the response
+if response.status_code != 201:
+    print('Error creating user:', response.text)
+else:
+    print('User created successfully!')
