@@ -3,11 +3,9 @@ import json
 import requests
 
 # parse the command line arguments
-parser = argparse.ArgumentParser(description='Create Office365 user')
-parser.add_argument('name', help='Name of the user')
-parser.add_argument('email', help='Email of the user')
-parser.add_argument('password', help='Password of the user')
-args = parser.parse_args()
+name = argv[1]
+email = argv[2]
+password = argv[3]
 
 # Load the token from the token.json file
 with open('token.json', 'r') as f:
@@ -19,12 +17,12 @@ url = 'https://graph.microsoft.com/v1.0/users'
 # Define the data for the new user
 data = {
     'accountEnabled': True,
-    'displayName': args.name,
-    'mailNickname': args.email.split('@')[0],
-    'userPrincipalName': args.email,
+    'displayName': name,
+    'mailNickname': email.split('@')[0],
+    'userPrincipalName': email,
     'passwordProfile': {
         'forceChangePasswordNextSignIn': True,
-        'password': args.password
+        'password': password
     }
 }
 
